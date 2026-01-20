@@ -20,7 +20,7 @@ func GetPodSpec(filepath string) (*corev1.Pod, error) {
 }
 
 func getPodSpecYamlFile(filepath string) (*corev1.Pod, error) {
-	dat, err := os.ReadFile(filepath)
+	dat, err := os.ReadFile(filepath) // #nosec G304
 	if err != nil {
 		return nil, err
 	}

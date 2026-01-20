@@ -24,6 +24,9 @@ type RunPodOptions struct {
 
 	//Whether a pre-existing pod should be replaced
 	ReplaceOldPod bool
+
+	//When to stop watching the pod and just succeed
+	DetachAtPodPhases []v1.PodPhase
 }
 
 func deleteLingeringPod(ctx context.Context, clientset *kubernetes.Clientset, namespace, name string, createTimeout time.Duration) error {
@@ -87,7 +90,7 @@ func RunPod(ctx context.Context, filepath string, opts *RunPodOptions) error {
 
 	runDeadlineCtx, cancelRun := context.WithTimeout(ctx, opts.RunTimeout)
 	defer cancelRun()
-	returnCode := WatchPodStreamLogsAndCleanup(runDeadlineCtx, clientset, *createPod, opts.CleanupPod)
+	returnCode := WatchPodStreamLogsAndCleanup(runDeadlineCtx, clientset, *createPod, opts.CleanupPod, opts.DetachAtPodPhases)
 	if returnCode != 0 {
 		return fmt.Errorf("encountered non-zero return code from watching pods %d", returnCode)
 	}

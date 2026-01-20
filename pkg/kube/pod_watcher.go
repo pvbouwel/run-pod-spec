@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"slices"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -15,7 +16,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func WatchPodStreamLogsAndCleanup(ctx context.Context, clientset *kubernetes.Clientset, pod corev1.Pod, cleanupPod bool) int {
+func WatchPodStreamLogsAndCleanup(ctx context.Context, clientset *kubernetes.Clientset, pod corev1.Pod, cleanupPod bool, detachPhases []corev1.PodPhase) int {
 	var podName = pod.GetName()
 	var podNamespace = pod.GetNamespace()
 	var returnCode = -1
@@ -37,6 +38,14 @@ func WatchPodStreamLogsAndCleanup(ctx context.Context, clientset *kubernetes.Cli
 		} else {
 			close(stopChannel)
 		}
+	}
+
+	stopIfDetachPhaseReached := func(phase corev1.PodPhase) {
+		if slices.Contains(detachPhases, phase) {
+			slog.Info("Encountered detach phase, stopping", "phase", phase)
+		}
+		returnCode = 0
+		close(stopChannel)
 	}
 
 	streamPodLogs := func() {
@@ -75,10 +84,12 @@ func WatchPodStreamLogsAndCleanup(ctx context.Context, clientset *kubernetes.Cli
 				if oldPod.ResourceVersion != newPod.ResourceVersion {
 					slog.Debug("Pod updated", "name", pod.GetName(), "namespace", pod.GetNamespace(), "status", newPod.Status.String())
 				}
+				stopIfDetachPhaseReached(newPod.Status.Phase)
 				if oldPod.Status.Phase == newPod.Status.Phase {
 					slog.Debug("Pod update remained in same phase", "phase", newPod.Status.Phase)
 					return //Avoid performing actions too often
 				}
+
 				switch newPod.Status.Phase {
 				case corev1.PodPending, corev1.PodUnknown:
 					return
