@@ -13,7 +13,7 @@ A binary that helps to run a Kubernetes pod manifest, stream the logs and cleanu
 Just invoke the CLI with -h to get the usage. For example usign the container image:
 ```sh
 podman run -it --rm localhost/run-pod-spec:latest -h
-``` 
+```
 
 ### Configuration
 If you run it on K8s it resolves API credentials using its service account.

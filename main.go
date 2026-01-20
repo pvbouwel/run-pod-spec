@@ -35,6 +35,9 @@ func main() {
 	var noReplace bool
 	flag.BoolVar(&noReplace, "no-replace", false, "Whether to not replace old pods. If set to true execution will fail rather than cleaning up and spawning new pod.")
 
+	var detachAtPodPhase string
+	flag.StringVar(&detachAtPodPhase, "detach-at-pod-phase", "", "If the pod reaches the pod-phase passed here then stop run-pod-spec with success and leave pod as is. WARNING: no cleanup will take place!")
+
 	flag.Parse()
 
 	if debug {
@@ -48,6 +51,7 @@ func main() {
 	slog.Debug("CLI argument", "run-timeout", runTimeout)
 	slog.Debug("CLI argument", "no-rm", noRm)
 	slog.Debug("CLI argument", "no-replace", noReplace)
+	slog.Debug("CLI argument", "detach-at-pod-phase", detachAtPodPhase)
 
 	cleanupPod := !noRm
 	slog.Debug("Action variable", "cleanupPod", cleanupPod)
@@ -56,13 +60,19 @@ func main() {
 		fail("A path to a pod manifest must be provided. Use '-f' to specify a manifest file.")
 	}
 
+	detachAtPodPhases, errArg := kube.PodPhasesFromString(detachAtPodPhase)
+	if errArg != nil {
+		fail("An invalid pod phase was specified for detach-at-pod-phase.", "error", errArg, "expected-one-of", kube.AllowedPodPhases())
+	}
+
 	mainCtx := context.Background()
 
 	opts := kube.RunPodOptions{
-		CreateTimeout: time.Duration(createTimeout) * time.Second,
-		RunTimeout:    time.Duration(runTimeout) * time.Second,
-		CleanupPod:    cleanupPod,
-		ReplaceOldPod: !noReplace,
+		CreateTimeout:     time.Duration(createTimeout) * time.Second,
+		RunTimeout:        time.Duration(runTimeout) * time.Second,
+		CleanupPod:        cleanupPod,
+		ReplaceOldPod:     !noReplace,
+		DetachAtPodPhases: detachAtPodPhases,
 	}
 
 	slog.Debug("Going to run pod", "options", opts)
