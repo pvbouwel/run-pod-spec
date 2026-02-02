@@ -1,5 +1,5 @@
 # Doing a multi-stage build to make sure to have passing of unittests enforced
-FROM docker.io/golang:1.24 AS base
+FROM docker.io/golang:1.25 AS base
 
 LABEL org.opencontainers.image.source=https://github.com/pvbouwel/run-pod-spec
 LABEL org.opencontainers.image.description="Run a Kubernetes pod manifest, stream the logs and cleanup the pod at the end."

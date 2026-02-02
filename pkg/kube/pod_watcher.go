@@ -43,9 +43,9 @@ func WatchPodStreamLogsAndCleanup(ctx context.Context, clientset *kubernetes.Cli
 	stopIfDetachPhaseReached := func(phase corev1.PodPhase) {
 		if slices.Contains(detachPhases, phase) {
 			slog.Info("Encountered detach phase, stopping", "phase", phase)
+			returnCode = 0
+			close(stopChannel)
 		}
-		returnCode = 0
-		close(stopChannel)
 	}
 
 	streamPodLogs := func() {
