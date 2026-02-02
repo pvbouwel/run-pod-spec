@@ -72,6 +72,11 @@ func RunPod(ctx context.Context, filepath string, opts *RunPodOptions) error {
 	name := podSpec.GetName()
 	namespace := podSpec.GetNamespace()
 
+	if namespace == "" {
+		slog.Error("No namespace in podSpec but that is required", "filepath", filepath)
+		return fmt.Errorf("missing namespace in podSpec")
+	}
+
 	if opts.ReplaceOldPod {
 		err := deleteLingeringPod(ctx, clientset, namespace, name, opts.CreateTimeout)
 		if err != nil {
