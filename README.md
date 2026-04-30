@@ -7,6 +7,17 @@ A binary that helps to run a Kubernetes pod manifest, stream the logs and cleanu
 
 `kubectl run` does not have a usable way to mount secrets/configmaps. This binary allows to use a full Pod spec.
 
+## Container images
+
+### From scratch
+
+Smallest footprint just golang binary and certificates.
+
+### From Alpine
+
+Footprint about 7x to include AWS CLI for workflows requiring fetching of eks tokens for authentication.
+
+
 ## Usage
 
 ### CLI documentation

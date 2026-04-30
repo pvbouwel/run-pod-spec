@@ -19,11 +19,13 @@ RUN go vet
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
 # If tests pass then build the final stage
-FROM scratch
+FROM alpine:3
 
+RUN apk update && apk add --no-cache aws-cli groff
 # We need to trust common SSL certificates to get issuer info
 COPY --from=base /etc/ssl /etc/ssl
 # We need our binary
 COPY --from=base /usr/src/runpodspec/main /run-pods-pec
+
 
 ENTRYPOINT [ "/run-pods-pec" ]
